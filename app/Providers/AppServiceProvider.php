@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Services\SupabaseService;
 use Illuminate\Support\ServiceProvider;
+use Supabase\Storage\StorageClient;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -11,7 +13,7 @@ class AppServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function register()
+   public function register()
     {
         //
     }

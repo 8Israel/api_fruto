@@ -168,7 +168,8 @@ class InventarioController extends Controller
             $inventario->comentarios = $request->input('comentarios');
         }
         if ($request->hasFile('img')) {
-            $path = $request->file('img')->store('public/inventario');
+            $image = $request->file('img')->storeOnCloudinary('api_fruto/registros_inventario');
+            $path = $image->getSecurePath();
             $inventario->img = $path;
         }
         $inventario->save();

@@ -34,7 +34,8 @@ class ContenedorController extends Controller
         $contenedor->peso = $request->input('peso');
 
         if ($request->hasFile('img')) {
-            $path = $request->file('img')->store('/public/contenedores');
+            $image = $request->file('img')->storeOnCloudinary('api_fruto/contenedores');
+            $path = $image->getSecurePath();
             $contenedor->img = $path;
         }
         $contenedor->save();

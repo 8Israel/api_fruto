@@ -6,10 +6,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.1",
-<<<<<<< HEAD
         "cloudinary-labs/cloudinary-laravel": "^2.1",
-=======
->>>>>>> 82571c90e465803c568036c059749bcaeb15b63b
         "fruitcake/laravel-cors": "^2.0.5",
         "guzzlehttp/guzzle": "^7.2",
         "laravel/framework": "^9.0",

@@ -13,23 +13,40 @@ class ProductoController extends Controller
 
     public function show(Request $request, $id = null)
     {
+        // Obtener por ID
         if ($id) {
-            $data = Producto::where('id', $id)->get();
-            return response()->json(['productos' => $data], 200);
+            $producto = Producto::find($id);
+            if ($producto) {
+                return response()->json(['productos' => [$producto]], 200);
+            } else {
+                return response()->json(['error' => 'Producto no encontrado'], 404);
+            }
         }
-        if ($request->input('nombre')) {
-            $data = Producto::where('nombre', $request->input('nombre'))->where('activo', 1)->get();
+    
+        // Obtener por nombre
+        if ($nombre = $request->input('nombre')) {
+            $data = Producto::where('nombre', $nombre)->get();
             if ($data->isNotEmpty()) {
                 return response()->json(['productos' => $data], 200);
             } else {
                 return response()->json(['error' => 'No se encontró el producto solicitado'], 404);
             }
         }
-        $data = Producto::where('activo', 1)->get();
+    
+        // Obtener por estado
+        if ($request->has('status')) {
+            $status = $request->input('status');
+            $data = Producto::where('activo', $status)->get();
+        } else {
+            // Obtener todos los productos si no se proporcionan otros criterios
+            $data = Producto::all();
+        }
+    
+        // Respuesta para todos los productos/filtrados
         if ($data->isNotEmpty()) {
             return response()->json(['productos' => $data], 200);
         } else {
-            return response()->json(['error' => 'No se encontraron productos activos'], 404);
+            return response()->json(['error' => 'No se encontraron productos'], 404);
         }
     }
 

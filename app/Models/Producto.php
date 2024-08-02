@@ -14,9 +14,7 @@ class Producto extends Model
     public $fillable=[
         'nombre',
         'categoria',
-        'img'
-    ];
-    public $hidden=[
+        'img',
         'activo'
     ];
 

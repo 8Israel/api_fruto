@@ -25,7 +25,8 @@ class ProductoController extends Controller
     
         // Obtener por nombre
         if ($nombre = $request->input('nombre')) {
-            $data = Producto::where('nombre', $nombre)->get();
+            $status = $request->input('status');
+            $data = Producto::where('nombre', $nombre)->where('activo', $status)->get();
             if ($data->isNotEmpty()) {
                 return response()->json(['productos' => $data], 200);
             } else {

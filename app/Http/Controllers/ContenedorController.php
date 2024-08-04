@@ -9,14 +9,22 @@ use Illuminate\Support\Facades\Validator;
 
 class ContenedorController extends Controller
 {
-    public function show()
+    public function show(Request $request)
     {
-        $data = Contenedor::where('activo', 1)->get();
-        if ($data->isNotEmpty()){
-            return response()->json(['data'=> $data],200);
+
+        if($request->has('status'))
+        {
+            $data = Contenedor::where('activo', $request->input('status'))->get();
+            if ($data->isNotEmpty()){
+                return response()->json(['data'=> $data],200);
+            }
+            else{
+                return response()->json(['errors'=>'No se encontraron contenedores'],404);
+            }
         }
         else{
-            return response()->json(['errors'=>'No se encontraron contenedores'],404);
+            $data = Contenedor::all();
+            return response()->json(['data'=> $data]);
         }
     }
     public function create(Request $request)
@@ -62,8 +70,9 @@ class ContenedorController extends Controller
                 $contenedor->peso = $request->input('peso');
             }
             if ($request->has('img')) {
-                $newpath = $request->file('img')->store('public/contenedores');
-                $contenedor->img = $newpath;
+                $image = $request->file('img')->storeOnCloudinary('api_fruto/contenedores');
+                $path = $image->getSecurePath();
+                $contenedor->img = $path;
             }
             $contenedor->save();
             return response()->json(['msj' => 'contenedor actualizado correctamente', 'data'=>$contenedor], 200);
@@ -80,10 +89,10 @@ class ContenedorController extends Controller
             $bol = $contenedor->activo;
 
             if($bol == true){
-                $contenedor->activo = false;
+                $contenedor->activo = 1;
             }
             else if($bol == false){
-                $contenedor->activo = true;
+                $contenedor->activo = 0;
             }
             $contenedor->save();
             return response()->json(['msj' => 'Estado del contenedor cambiado correctamente', 'data'=>$contenedor], 200);
@@ -96,3 +105,5 @@ class ContenedorController extends Controller
     }
 
 }
+
+#git commit -m "Create ContenderoController arreglado"

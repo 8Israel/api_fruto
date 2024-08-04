@@ -14,11 +14,9 @@ class Contenedor extends Model
     protected $fillable = [
         'nombre',
         'peso',
-        'img'
-    ]; 
-    protected $hidden=[
+        'img',
         'activo'
-    ];
+    ]; 
     public $timestamps = false;
 
     public function inventario(){

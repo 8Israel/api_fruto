@@ -13,7 +13,7 @@ class ContenedorController extends Controller
     {
         if($id){
             $data = Contenedor::find($id);
-            return response()->json(['data'=> $data],200);
+            return response()->json(['data'=> [$data]],200);
         }
 
         if($request->has('status'))

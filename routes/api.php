@@ -32,7 +32,7 @@ Route::prefix('categoria')->group(function(){
 
 Route::prefix('contenedor')->group(function(){
     Route::post('create', [ContenedorController::class, 'create']);
-    Route::get('show', [ContenedorController::class, 'show']);
+    Route::get('show/{id?}', [ContenedorController::class, 'show']);
     Route::post('update/{id}', [ContenedorController::class, 'update']);
     Route::delete('delete/{id}', [ContenedorController::class, 'delete']);
 });

@@ -9,8 +9,12 @@ use Illuminate\Support\Facades\Validator;
 
 class ContenedorController extends Controller
 {
-    public function show(Request $request)
+    public function show(Request $request, $id = null)
     {
+        if($id){
+            $data = Contenedor::where('activo', $request->input('status'))->where('id', $id)->get();
+            return response()->json(['data'=> $data],200);
+        }
 
         if($request->has('status'))
         {

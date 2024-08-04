@@ -56,7 +56,7 @@ class ContenedorController extends Controller
     public function update(Request $request, $id)
     {
         $validate = Validator::make($request->all(), [
-            'nombre' => 'unique:peso_contenedor',
+            'nombre' => 'unique:peso_contenedor|nullable',
             'peso' => 'nullable|numeric',
             'img' => 'nullable|image:png, jpg'
         ]);

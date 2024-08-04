@@ -12,7 +12,7 @@ class ContenedorController extends Controller
     public function show(Request $request, $id = null)
     {
         if($id){
-            $data = Contenedor::where('activo', $request->input('status'))->where('id', $id)->get();
+            $data = Contenedor::find($id);
             return response()->json(['data'=> $data],200);
         }
 

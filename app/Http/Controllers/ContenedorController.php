@@ -88,11 +88,11 @@ class ContenedorController extends Controller
         if($contenedor){
             $bol = $contenedor->activo;
 
-            if($bol == true){
-                $contenedor->activo = 1;
-            }
-            else if($bol == false){
+            if($bol == 1){
                 $contenedor->activo = 0;
+            }
+            else if($bol == 0){
+                $contenedor->activo = 1;
             }
             $contenedor->save();
             return response()->json(['msj' => 'Estado del contenedor cambiado correctamente', 'data'=>$contenedor], 200);

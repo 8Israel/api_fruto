@@ -229,6 +229,25 @@ class InventarioController extends Controller
 
         return $pesoNeto;
     }
+
+    public function getFechasInventarios(Request $request)
+    {
+        $fecha = $request->input('fecha');
+
+        if ($fecha) {
+            $fechas = Inventario::selectRaw('DATE(created_at) as fecha')
+                ->whereDate('created_at', $fecha)
+                ->distinct()
+                ->orderBy('fecha', 'desc') // Ordenar de más reciente a más antigua
+                ->get();
+        } else {
+            $fechas = Inventario::selectRaw('DATE(created_at) as fecha')
+                ->distinct()
+                ->orderBy('fecha', 'desc') // Ordenar de más reciente a más antigua
+                ->get();
+        }
+        return response()->json(["fechas" => $fechas]);
+    }
     public function showDatosInventariosAgrupados(Request $request)
     {
         // Obtener la fecha de la solicitud

@@ -232,22 +232,28 @@ class InventarioController extends Controller
 
     public function getFechasInventarios(Request $request)
     {
+        $idTipo = $request->input('idTipo'); // Obtener el tipo de inventario desde la solicitud
         $fecha = $request->input('fecha');
 
-        if ($fecha) {
-            $fechas = Inventario::selectRaw('DATE(created_at) as fecha')
-                ->whereDate('created_at', $fecha)
-                ->distinct()
-                ->orderBy('fecha', 'desc') // Ordenar de más reciente a más antigua
-                ->get();
-        } else {
-            $fechas = Inventario::selectRaw('DATE(created_at) as fecha')
-                ->distinct()
-                ->orderBy('fecha', 'desc') // Ordenar de más reciente a más antigua
-                ->get();
+        if (!$idTipo) {
+            return response()->json(["error" => "Tipo de inventario requerido"], 400);
         }
+
+        // Filtrar por tipo de inventario y fecha si se proporciona
+        $query = Inventario::selectRaw('DATE(created_at) as fecha')
+            ->where('id_tipo', $idTipo);
+
+        if ($fecha) {
+            $query->whereDate('created_at', $fecha);
+        }
+
+        $fechas = $query->distinct()
+            ->orderBy('fecha', 'desc') // Ordenar de más reciente a más antigua
+            ->get();
+
         return response()->json(["fechas" => $fechas]);
     }
+
     public function showDatosInventariosAgrupados(Request $request)
     {
         // Obtener la fecha de la solicitud

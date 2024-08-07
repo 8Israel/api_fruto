@@ -68,4 +68,6 @@ Route::prefix('inventario')->group(function(){
     Route::get('fechas-inventarios', [InventarioController::class, 'getFechasInventarios']);
 
     Route::post('terminar/{id}',[InventarioController::class, 'terminarInventario']);
+
+    Route::get('InventariosAgrupados', [InventarioController::class, 'showDatosInventariosAgrupados']);
 });

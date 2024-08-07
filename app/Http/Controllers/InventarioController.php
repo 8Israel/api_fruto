@@ -31,11 +31,23 @@ class InventarioController extends Controller
             });
         }
 
+        // Obtener el parámetro de orden
+        $orden = $request->input('orden', 'desc'); // 'asc' por defecto
+
+        // Validar el parámetro de orden
+        if (!in_array($orden, ['asc', 'desc'])) {
+            return response()->json(["error" => "Orden no válido, use 'asc' o 'desc'"], 400);
+        }
+
+        // Ordenar por peso_Neto según el parámetro de orden
+        $query->orderBy('peso_Neto', $orden);
+
         // Ejecuta la consulta y obtiene los resultados
         $inventario = $query->get();
 
         return response()->json(["Inventario" => $inventario]);
     }
+
     public function getRegistroById($id)
     {
         $inventario = Inventario::with('producto', 'contenedor')->find($id);
@@ -57,6 +69,17 @@ class InventarioController extends Controller
                 $q->where('nombre', 'like', '%' . $request->input('nomProducto') . '%');
             });
         }
+
+        // Obtener el parámetro de orden
+        $orden = $request->input('orden', 'desc'); // 'asc' por defecto
+
+        // Validar el parámetro de orden
+        if (!in_array($orden, ['asc', 'desc'])) {
+            return response()->json(["error" => "Orden no válido, use 'asc' o 'desc'"], 400);
+        }
+
+        // Ordenar por peso_Neto según el parámetro de orden
+        $query->orderBy('peso_Neto', $orden);
 
         // Ejecuta la consulta y obtiene los resultados
         $inventario = $query->get();
@@ -206,24 +229,126 @@ class InventarioController extends Controller
 
         return $pesoNeto;
     }
-
-    public function getFechasInventarios(Request $request)
+    public function showDatosInventariosAgrupados(Request $request)
     {
+        // Obtener la fecha de la solicitud
         $fecha = $request->input('fecha');
-
-        if ($fecha) {
-            $fechas = Inventario::selectRaw('DATE(created_at) as fecha')
-                ->whereDate('created_at', $fecha)
-                ->distinct()
-                ->orderBy('fecha', 'desc') // Ordenar de más reciente a más antigua
-                ->get();
-        } else {
-            $fechas = Inventario::selectRaw('DATE(created_at) as fecha')
-                ->distinct()
-                ->orderBy('fecha', 'desc') // Ordenar de más reciente a más antigua
-                ->get();
+        if (!$fecha) {
+            return response()->json(["error" => "Fecha requerida"], 400);
         }
-        return response()->json(["fechas" => $fechas]);
+
+        // Obtener los filtros opcionales
+        $nombreProducto = $request->input('nombre');
+        $idProducto = $request->input('id_producto');
+        $orden = $request->input('orden', 'asc'); // 'asc' por defecto, se puede cambiar a 'desc'
+
+        // Validar el parámetro de orden
+        if (!in_array($orden, ['asc', 'desc'])) {
+            return response()->json(["error" => "Orden no válido, use 'asc' o 'desc'"], 400);
+        }
+
+        // IDs de los tipos de inventario para estantes y cuarto frío
+        $idEstantes = 1;
+        $idCuartoFrio = 2;
+
+        // Consultar inventario de estantería
+        $inventarioEstanteriaQuery = Inventario::where('id_tipo', $idEstantes)
+            ->whereDate('created_at', $fecha)
+            ->with('producto', 'contenedor');
+
+        // Aplicar filtros de búsqueda
+        if ($nombreProducto) {
+            $inventarioEstanteriaQuery->whereHas('producto', function ($query) use ($nombreProducto) {
+                $query->where('nombre', 'LIKE', '%' . $nombreProducto . '%');
+            });
+        }
+
+        if ($idProducto) {
+            $inventarioEstanteriaQuery->where('id_Producto', $idProducto);
+        }
+
+        $inventarioEstanteria = $inventarioEstanteriaQuery->get();
+
+        // Consultar inventario de cuarto frío
+        $inventarioCuartoFrioQuery = Inventario::where('id_tipo', $idCuartoFrio)
+            ->whereDate('created_at', $fecha)
+            ->with('producto', 'contenedor');
+
+        // Aplicar filtros de búsqueda
+        if ($nombreProducto) {
+            $inventarioCuartoFrioQuery->whereHas('producto', function ($query) use ($nombreProducto) {
+                $query->where('nombre', 'LIKE', '%' . $nombreProducto . '%');
+            });
+        }
+
+        if ($idProducto) {
+            $inventarioCuartoFrioQuery->where('id_Producto', $idProducto);
+        }
+
+        $inventarioCuartoFrio = $inventarioCuartoFrioQuery->get();
+
+        // Agrupar inventarios por id de producto
+        $productosAgrupados = [];
+
+        // Procesar inventario de estantería
+        foreach ($inventarioEstanteria as $registro) {
+            $idProducto = $registro->id_Producto;
+            if (!isset($productosAgrupados[$idProducto])) {
+                $productosAgrupados[$idProducto] = [
+                    'producto' => $registro->producto,
+                    'inventario_estanteria' => null,
+                    'inventario_cuarto_frio' => null,
+                    'peso_neto_total' => 0
+                ];
+            }
+
+            $productosAgrupados[$idProducto]['inventario_estanteria'] = $registro;
+            $productosAgrupados[$idProducto]['peso_neto_total'] += (float) $registro->peso_Neto;
+        }
+
+        // Procesar inventario de cuarto frío
+        foreach ($inventarioCuartoFrio as $registro) {
+            $idProducto = $registro->id_Producto;
+            if (!isset($productosAgrupados[$idProducto])) {
+                $productosAgrupados[$idProducto] = [
+                    'producto' => $registro->producto,
+                    'inventario_estanteria' => null,
+                    'inventario_cuarto_frio' => null,
+                    'peso_neto_total' => 0
+                ];
+            }
+
+            $productosAgrupados[$idProducto]['inventario_cuarto_frio'] = $registro;
+            $productosAgrupados[$idProducto]['peso_neto_total'] += (float) $registro->peso_Neto;
+        }
+
+        // Convertir a lista indexada
+        $productosAgrupados = array_values($productosAgrupados);
+
+        // Ordenar la lista por peso neto total
+        usort($productosAgrupados, function ($a, $b) use ($orden) {
+            if ($orden === 'asc') {
+                return $a['peso_neto_total'] <=> $b['peso_neto_total'];
+            } else {
+                return $b['peso_neto_total'] <=> $a['peso_neto_total'];
+            }
+        });
+
+        // Formatear la respuesta
+        $respuesta = [
+            'Inventario' => []
+        ];
+
+        foreach ($productosAgrupados as $producto) {
+            $respuesta['Inventario'][] = [
+                'producto' => $producto['producto'],
+                'inventario_estanteria' => $producto['inventario_estanteria'],
+                'inventario_cuarto_frio' => $producto['inventario_cuarto_frio'],
+                'peso_neto_total' => $producto['peso_neto_total']
+            ];
+        }
+
+        return response()->json($respuesta);
     }
 
 }
